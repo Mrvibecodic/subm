@@ -1,0 +1,268 @@
+---
+title: Docker Compose вручную
+description: Готовый docker-compose.yml под ваш случай — скачать, вписать пару строк, запустить.
+---
+
+Выберите свой вариант на любой вкладке — остальные шаги переключатся на него же.
+
+<Steps>
+<Step>
+
+### Создайте папку [#compose-dir]
+
+```bash title="Терминал"
+mkdir -p /opt/remnawave-subscription-middleware
+cd /opt/remnawave-subscription-middleware
+```
+
+</Step>
+<Step>
+
+### Скачайте файл [#compose-get]
+
+<Tabs groupId="scn" persist items={['Рядом с панелью', 'Свой реверс-прокси', 'Caddy из файла', 'nginx из файла']}>
+<Tab value="Рядом с панелью">
+
+```bash title="Терминал"
+curl -fsSL https://raw.githubusercontent.com/Mrvibecodic/remnawave-subscription-middleware/main/docker/docker-compose.panel.yml -o docker-compose.yml
+```
+
+</Tab>
+<Tab value="Свой реверс-прокси">
+
+```bash title="Терминал"
+curl -fsSL https://raw.githubusercontent.com/Mrvibecodic/remnawave-subscription-middleware/main/docker/docker-compose.standalone.yml -o docker-compose.yml
+```
+
+С MariaDB вместо SQLite — тот же адрес, файл `docker-compose.standalone-mysql.yml`. Больше ничего настраивать не нужно.
+
+</Tab>
+<Tab value="Caddy из файла">
+
+```bash title="Терминал"
+curl -fsSL https://raw.githubusercontent.com/Mrvibecodic/remnawave-subscription-middleware/main/docker/docker-compose.standalone-caddy.yml -o docker-compose.yml
+curl -fsSL https://raw.githubusercontent.com/Mrvibecodic/remnawave-subscription-middleware/main/docker/caddy/Caddyfile -o Caddyfile
+```
+
+С MariaDB вместо SQLite — файл `docker-compose.standalone-caddy-mysql.yml`.
+
+</Tab>
+<Tab value="nginx из файла">
+
+```bash title="Терминал"
+curl -fsSL https://raw.githubusercontent.com/Mrvibecodic/remnawave-subscription-middleware/main/docker/docker-compose.standalone-nginx.yml -o docker-compose.yml
+curl -fsSL https://raw.githubusercontent.com/Mrvibecodic/remnawave-subscription-middleware/main/docker/nginx/nginx.conf.template -o nginx.conf.template
+```
+
+С MariaDB вместо SQLite — файл `docker-compose.standalone-nginx-mysql.yml`.
+
+</Tab>
+</Tabs>
+
+</Step>
+<Step>
+
+### Впишите свои данные [#compose-edit]
+
+<Tabs groupId="scn" persist items={['Рядом с панелью', 'Свой реверс-прокси', 'Caddy из файла', 'nginx из файла']}>
+<Tab value="Рядом с панелью">
+
+Если панель ставилась стандартно, править ничего не нужно: прослойка подключится к сети `remnawave-network` и найдёт контейнеры `remnawave` и `remnawave-subscription-page`. API-токен в файл не вписывают, его спросит мастер. Если имена у вас другие, поправьте их в этих строках:
+
+```yaml title="docker-compose.yml"
+    environment:
+      - SUBMW_SCENARIO=panel
+      - SUBMW_PANEL_URL=http://remnawave:3000 # [!code highlight]
+      - SUBMW_SUBPAGE_URL=http://remnawave-subscription-page:3010 # [!code highlight]
+# ...
+networks:
+  remnawave-network: # [!code highlight]
+    external: true
+```
+
+</Tab>
+<Tab value="Свой реверс-прокси">
+
+Кроме прослойки, файл поднимает страницу подписки Remnawave — сервис `subpage` из официального образа `remnawave/subscription-page`. Её прослойка показывает, когда ссылку подписки открывают в браузере. Это та же страница, что в инструкции панели [Separate server](https://docs.rw/install/subscription-page/separate-server), только ставить её отдельно не нужно: она уже в файле. Страница ходит в панель сама, поэтому впишите ей адрес панели и API-токен:
+
+```yaml title="docker-compose.yml"
+  subpage:
+    environment:
+      - APP_PORT=3010
+      - REMNAWAVE_PANEL_URL=https://panel.example.com # [!code highlight]
+      - REMNAWAVE_API_TOKEN=eyJhbGciOi… # [!code highlight]
+      # Панель за cookie-защитой (установщик eGames / remnawave-reverse-proxy): имя=значение из ссылки входа
+      - EGAMES_COOKIE= # [!code highlight]
+      # Панель за caddy-with-auth / Tiny Auth: ключ X-Api-Key
+      - CADDY_AUTH_API_TOKEN=
+```
+
+* `REMNAWAVE_PANEL_URL` — адрес, по которому вы входите в панель.
+* `REMNAWAVE_API_TOKEN` — тот же токен, что потом вводится в мастере. Второй токен создавать не нужно.
+* `EGAMES_COOKIE` — только если панель ставилась установщиком с защитной cookie. Это часть ссылки входа после «?», например `abcd=1234`.
+
+<Callout type="warn" title="Страница подписки обязательна вместо текущей подписки">
+Если прослойка встаёт вместо текущей подписки, сервис `subpage` не удаляйте. Без него ссылка подписки в браузере не откроется как страница подписки: вместо неё будет служебный ответ панели. VPN-клиентам он не нужен, но пользователи, открывшие ссылку в браузере, страницу не увидят.
+
+Для **зеркала** сервис не нужен: страница подписки берётся с домена подписки панели. Его можно удалить из файла.
+</Callout>
+
+</Tab>
+<Tab value="Caddy из файла">
+
+У сервиса `caddy` впишите домен прослойки: для зеркала — новый домен зеркала. У сервиса `subpage` (страница подписки Remnawave) — адрес панели и API-токен:
+
+```yaml title="docker-compose.yml"
+  subpage:
+    environment:
+      - APP_PORT=3010
+      - REMNAWAVE_PANEL_URL=https://panel.example.com # [!code highlight]
+      - REMNAWAVE_API_TOKEN=eyJhbGciOi… # [!code highlight]
+      - EGAMES_COOKIE= # [!code highlight]
+      - CADDY_AUTH_API_TOKEN=
+# ...
+  caddy:
+    environment:
+      - SUBMW_DOMAIN=sub.example.com # [!code highlight]
+```
+
+`EGAMES_COOKIE` заполняют, только если панель закрыта защитной cookie: это часть ссылки входа после «?». Про страницу подписки — то же, что на вкладке «Свой реверс-прокси».
+
+<Callout type="warn">
+До запуска DNS домена должен указывать на этот сервер, а порты 80 и 443 должны быть свободны. Иначе Caddy не выпустит сертификат.
+</Callout>
+
+</Tab>
+<Tab value="nginx из файла">
+
+В начале файла впишите домен прослойки (для зеркала — новый домен зеркала) и, по желанию, почту для писем Let's Encrypt. У сервиса `subpage` (страница подписки Remnawave) — адрес панели и API-токен:
+
+```yaml title="docker-compose.yml"
+x-submw-domain: &submw-domain
+  SUBMW_DOMAIN: sub.example.com # [!code highlight]
+  # Почта для Let's Encrypt (необязательно): письма об истечении сертификата
+  SUBMW_EMAIL: '' # [!code highlight]
+# ...
+  subpage:
+    environment:
+      - APP_PORT=3010
+      - REMNAWAVE_PANEL_URL=https://panel.example.com # [!code highlight]
+      - REMNAWAVE_API_TOKEN=eyJhbGciOi… # [!code highlight]
+      - EGAMES_COOKIE= # [!code highlight]
+      - CADDY_AUTH_API_TOKEN=
+```
+
+`nginx.conf.template` править не нужно: домен nginx возьмёт из `SUBMW_DOMAIN`. `EGAMES_COOKIE` и страница подписки — как на вкладке «Свой реверс-прокси».
+
+<Callout type="warn">
+До запуска DNS домена должен указывать на этот сервер, а порты 80 и 443 должны быть свободны. Иначе certbot не выпустит сертификат.
+</Callout>
+
+</Tab>
+</Tabs>
+
+Версию образа задаёт строка `image`: по умолчанию `v1` — стабильный релиз. Для тестовой версии поставьте в конце строки `:dev`.
+
+</Step>
+<Step>
+
+### Запустите [#compose-up]
+
+```bash title="Терминал"
+docker compose up -d
+```
+
+</Step>
+<Step>
+
+### Направьте домен на прослойку [#compose-domain]
+
+<Tabs groupId="scn" persist items={['Рядом с панелью', 'Свой реверс-прокси', 'Caddy из файла', 'nginx из файла']}>
+<Tab value="Рядом с панелью">
+
+Сейчас домен подписки обслуживает контейнер страницы подписки. Переключите его на прослойку в реверс-прокси панели.
+
+**Caddy** (remnawave-reverse-proxy): в `/opt/remnawave/docker-compose.yml` у контейнера Caddy задайте `SUB_BACKEND_URL=127.0.0.1:8080` и перезапустите его:
+
+```bash title="Терминал"
+cd /opt/remnawave && docker compose up -d remnawave-caddy
+```
+
+**nginx** (установщик eGames): в `/opt/remnawave/nginx.conf` поменяйте адрес в блоке `upstream json` и перезагрузите nginx:
+
+```nginx title="/opt/remnawave/nginx.conf"
+upstream json {
+    server 127.0.0.1:8080; # [!code highlight]
+}
+```
+
+```bash title="Терминал"
+docker exec remnawave-nginx nginx -t && docker exec remnawave-nginx nginx -s reload
+```
+
+<Callout type="warn">
+С этого момента и до конца мастера подписки на домене не открываются. Переключайте домен, когда готовы сразу пройти мастер: это несколько минут. Контейнер `remnawave-subscription-page` не останавливайте, прослойка показывает его страницу в браузере.
+</Callout>
+
+</Tab>
+<Tab value="Свой реверс-прокси">
+
+Направьте DNS домена на этот сервер. В своём реверс-прокси отправьте домен на `127.0.0.1:8080` и передайте заголовки. Пример для nginx:
+
+```nginx title="nginx"
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name sub.example.com;
+    # ssl_certificate и ssl_certificate_key — ваш сертификат
+
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+В панели хостинга то же самое обычно называется «прокси» или «обратный прокси» на адрес `http://127.0.0.1:8080`.
+
+<Callout>
+Если прослойка встаёт вместо текущей подписки, после смены DNS подписки будет отдавать она. Ссылки у пользователей остаются прежними.
+</Callout>
+
+</Tab>
+<Tab value="Caddy из файла">
+
+Ничего делать не нужно: Caddy уже отправляет домен в прослойку. Сертификат он выпустит при первом запросе. Если сайт не открывается, посмотрите журнал Caddy:
+
+```bash title="Терминал"
+docker compose logs caddy
+```
+
+</Tab>
+<Tab value="nginx из файла">
+
+Ничего делать не нужно. Через несколько секунд после запуска certbot выпустит сертификат, а nginx подхватит его сам, без перезапуска. Дальше certbot дважды в сутки проверяет срок и продлевает сертификат заранее. Если выпустить не вышло, certbot пробует снова каждые 15 минут. Что происходит, видно в журнале:
+
+```bash title="Терминал"
+docker compose logs certbot
+```
+
+</Tab>
+</Tabs>
+
+</Step>
+<Step>
+
+### Возьмите ссылку мастера [#compose-link]
+
+```bash title="Терминал"
+docker compose logs submw
+```
+
+В журнале будет строка со ссылкой. Что с ней делать — в разделе [«Ссылка мастера»](/ru/docs/wizard-link).
+
+</Step>
+</Steps>

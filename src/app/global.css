@@ -1,0 +1,24 @@
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
+
+html {
+  scrollbar-gutter: stable;
+}
+
+html > body[data-scroll-locked] {
+  margin-right: 0px !important;
+  --removed-body-scroll-bar-size: 0px !important;
+}
+
+/* Акцент прослойки (как в админке) поверх нейтральной темы Fumadocs */
+:root {
+  --color-fd-primary: #0f766e;
+  --color-fd-primary-foreground: #ffffff;
+  --color-fd-ring: #0f766e;
+}
+.dark {
+  --color-fd-primary: #2dd4bf;
+  --color-fd-primary-foreground: #04201c;
+  --color-fd-ring: #2dd4bf;
+}

@@ -1,0 +1,17 @@
+{
+  "title": "Документация",
+  "root": true,
+  "pages": [
+    "---Начало---",
+    "index",
+    "requirements",
+    "---Установка---",
+    "install",
+    "install-compose",
+    "install-script",
+    "install-files",
+    "wizard-link",
+    "wizard",
+    "after-install"
+  ]
+}

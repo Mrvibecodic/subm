@@ -1,0 +1,119 @@
+---
+title: Файлами на хостинг
+description: Прослойка — обычный PHP-сайт. Подойдёт любой хостинг или сервер с PHP, Docker не нужен.
+---
+
+Шаги одинаковые для любой панели хостинга и для своего сервера. Пункты меню у панелей называются по-разному, смысл тот же.
+
+<Steps>
+<Step>
+
+### Создайте сайт [#files-site]
+
+Сайт на домене прослойки. Вместо текущей подписки — домен подписки панели, для зеркала — новый домен. Выберите PHP 8.1 или новее и включите сертификат Let's Encrypt: обычно это галочка в настройках сайта.
+
+</Step>
+<Step>
+
+### Загрузите файлы [#files-upload]
+
+Скачайте архив последнего релиза: [страница релизов](https://github.com/Mrvibecodic/remnawave-subscription-middleware/releases/latest) → «Source code (zip)». Распакуйте его в корень сайта так, чтобы `index.php` лежал прямо в корне, а не во вложенной папке.
+
+Если есть доступ по SSH, можно скачать сразу на сервер:
+
+```bash title="Терминал"
+cd /var/www/sub.example.com      # корень сайта, папка должна быть пустой
+git clone https://github.com/Mrvibecodic/remnawave-subscription-middleware.git .
+```
+
+<Callout type="warn">
+Проверьте, что загрузился скрытый файл `.htaccess`. Файловые менеджеры часто прячут файлы, имя которых начинается с точки. Без него служебные папки будут открыты из интернета.
+</Callout>
+
+</Step>
+<Step>
+
+### Проверьте права [#files-perms]
+
+PHP должен иметь право записи в папку `data/` — там будут база и настройки. Прослойка создаст папку сама при первом открытии. Если хостинг этого не даёт, создайте её вручную с правом записи для пользователя сайта.
+
+</Step>
+<Step>
+
+### Закройте служебные пути [#files-web]
+
+<Tabs groupId="web" persist items={['Apache', 'nginx']}>
+<Tab value="Apache">
+
+Всё уже прописано в `.htaccess`. Нужны модуль `mod_rewrite` и разрешение на `.htaccess` (`AllowOverride All`) — на хостингах они почти всегда включены. Связка nginx + Apache, как во многих панелях хостинга, тоже подходит.
+
+</Tab>
+<Tab value="nginx">
+
+Чистый nginx не читает `.htaccess`, правила нужно добавить в блок `server` сайта:
+
+```nginx title="nginx"
+root /var/www/sub.example.com;
+index index.php;
+
+location ~ ^/(config\.php|config\.example\.php|lib\.php|schema\.sql|README\.md|INSTALL\.md|install\.sh|Dockerfile)$ { deny all; }
+location ~* \.(sqlite|sqlite3|db|db-wal|db-shm)$ { deny all; }
+location ~ ^/(.*/)?assets/\.app-config-v2\.json$ { try_files $uri /index.php$is_args$args; }
+location ~ /\.(?!well-known) { deny all; }
+location ^~ /data/      { deny all; }
+location ^~ /lib/       { deny all; }
+location ^~ /backups/   { deny all; }
+location ^~ /docker/    { deny all; }
+location ^~ /tools/     { deny all; }
+location ^~ /admin/inc/ { deny all; }
+
+location /admin/ { try_files $uri $uri/ /admin/index.php$is_args$args; }
+location / { try_files $uri /index.php$is_args$args; }
+
+location ~ \.php$ {
+    include fastcgi_params;
+    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    fastcgi_pass unix:/run/php/php8.3-fpm.sock;   # ваш сокет PHP-FPM
+}
+```
+
+</Tab>
+</Tabs>
+
+Проверьте в браузере: `https://sub.example.com/schema.sql` и `https://sub.example.com/lib/` должны отвечать ошибкой 403 или 404.
+
+</Step>
+<Step>
+
+### Получите ссылку мастера [#files-link]
+
+Откройте `https://sub.example.com/admin/`. Вы увидите страницу-заглушку — так и должно быть: в этот момент прослойка создаёт ключ установки. Дальше любой из способов:
+
+* **Файловый менеджер.** Откройте `data/install.json` и скопируйте значение `key`. Ссылка получается так: `https://ваш-домен/admin/?` и ключ.
+* **SSH.** В папке сайта выполните `php tools/admin-gate.php`, он напечатает ссылку.
+* **Журнал ошибок PHP** сайта: строка `submw: ссылка установки`.
+
+```json title="data/install.json"
+{
+    "key": "kijm36wa=d4542e707f0836cc5340e737",
+    ...
+}
+```
+
+Из этого ключа получается ссылка `https://sub.example.com/admin/?kijm36wa=d4542e707f0836cc5340e737`. В мастере на первом шаге выберите «Без Docker».
+
+</Step>
+<Step>
+
+### Включите планировщик [#files-cron]
+
+После установки добавьте задачу cron раз в минуту от пользователя сайта. Готовая строка с вашими путями есть в админке, на вкладке «О системе»:
+
+```bash title="cron"
+* * * * * php /var/www/sub.example.com/tools/cron.php >/dev/null 2>&1
+```
+
+Нужен консольный PHP (php-cli). Планировщик выполняет фоновые задачи, например сбор сессий. Подписки отдаются и без него.
+
+</Step>
+</Steps>

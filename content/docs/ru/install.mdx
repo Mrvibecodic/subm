@@ -1,0 +1,61 @@
+---
+title: Способы установки
+description: Готовым docker-compose.yml, скриптом или файлами на хостинг.
+---
+
+import { Box, Folder, Terminal } from 'lucide-react'
+
+<Cards>
+  <Card icon={<Box />} title="Docker Compose вручную" href="/ru/docs/install-compose">
+    Берёте готовый `docker-compose.yml` под свой случай, правите пару строк и запускаете. Рекомендуемый способ.
+  </Card>
+  <Card icon={<Terminal />} title="Скриптом" href="/ru/docs/install-script">
+    Отвечаете на вопросы в консоли. Скрипт сам скачает нужный файл, впишет ваши данные и запустит прослойку.
+  </Card>
+  <Card icon={<Folder />} title="Файлами на хостинг" href="/ru/docs/install-files">
+    Обычный PHP-сайт на любом хостинге или сервере, без Docker.
+  </Card>
+</Cards>
+
+<Callout type="success">
+**Лучше ставить вручную через Docker Compose.** Так вы видите каждый шаг и знаете, что и куда поставлено, а если что-то пойдёт не так — проще найти и поправить. Скрипт удобен для быстрого старта, но решения он принимает за вас.
+</Callout>
+
+## Как проходит установка [#install-flow]
+
+<Steps>
+<Step>
+**Поставить прослойку** одним из способов выше.
+</Step>
+<Step>
+**Направить домен на прослойку** в реверс-прокси. С Caddy или nginx из готового compose это уже сделано.
+</Step>
+<Step>
+**Взять [ссылку мастера](/ru/docs/wizard-link).** Без неё мастер не откроется.
+</Step>
+<Step>
+**Пройти [мастер установки](/ru/docs/wizard)** — пять шагов с проверками.
+</Step>
+<Step>
+**Добавить вебхук в панель** и проверить связь — [«После установки»](/ru/docs/after-install).
+</Step>
+</Steps>
+
+## Какой docker-compose.yml нужен [#install-which]
+
+Для Docker есть готовые файлы под каждый случай. Скрипт выбирает файл сам по вашим ответам, а при установке вручную файл берут по таблице:
+
+| Где прослойка | Реверс-прокси и HTTPS | Файл |
+| --- | --- | --- |
+| Рядом с панелью | реверс-прокси панели | `docker-compose.panel.yml` |
+| Отдельный сервер | свой: nginx, Caddy, панель хостинга | `docker-compose.standalone.yml` |
+| Отдельный чистый сервер | Caddy из файла, сертификат выпускается сам | `docker-compose.standalone-caddy.yml` и `Caddyfile` |
+| Отдельный чистый сервер | nginx из файла, сертификат выпускает certbot | `docker-compose.standalone-nginx.yml` и `nginx.conf.template` |
+
+Для отдельного сервера есть варианты с MariaDB: `docker-compose.standalone-mysql.yml`, `docker-compose.standalone-caddy-mysql.yml` и `docker-compose.standalone-nginx-mysql.yml`. Без них база — SQLite.
+
+Файлы для отдельного сервера, кроме прослойки, поднимают страницу подписки Remnawave — сервис `subpage`. Это официальный контейнер панели, тот же, что в её инструкции [Separate server](https://docs.rw/install/subscription-page/separate-server). Страница подписки панели работает на сервере панели, а прослойке на другом сервере нужна своя рядом. Вместо текущей подписки этот сервис обязателен, удалить его можно только у зеркала.
+
+<Callout>
+**Зеркало** ставится файлами для отдельного сервера, даже если оно стоит на сервере панели. Файл «рядом с панелью» работает только вместо текущей подписки. Режим выбирается в мастере, на первом шаге.
+</Callout>
