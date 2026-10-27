@@ -9,6 +9,7 @@
 * Next.js со статической сборкой для GitHub Pages. Контент, меню и поиск — [fumadocs-core](https://fumadocs.dev) и fumadocs-mdx, оформление своё (`src/app/global.css`, `src/components/`) — один в один с утверждённым макетом.
 * Страницы — `content/docs/ru/**/*.mdx`, порядок и группы меню — `meta.json`, иконки пунктов — поле `icon` (имя иконки Lucide).
 * Скриншоты — `public/screenshots/<имя>-<light|dark>-<d|m>.webp`: светлая и тёмная тема, ПК и телефон. Вставляются компонентом `<Shot name="<имя>" alt="…" />`, размеры — в `src/lib/shots.json`.
+* `files/` — копии compose-файлов, `Caddyfile` и шаблона nginx из репозитория прослойки; документация показывает их целиком под спойлерами. Обновить: `scripts/sync-files.sh [ветка]` (по умолчанию `dev`).
 * Сборка и публикация — `.github/workflows/pages.yml` при пуше в `main`.
 
 ## Локально

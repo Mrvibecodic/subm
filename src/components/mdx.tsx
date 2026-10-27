@@ -5,6 +5,7 @@ import { CodeBlock, Tab, Tabs } from '@/components/blocks'
 import { Flow } from '@/components/flow'
 import { IcoCheck, IcoInfo, IcoWarn } from '@/components/icons'
 import { Shot } from '@/components/shot'
+import { SourceFile } from '@/components/source-file'
 
 function Callout({ type, title, children }: { type?: 'info' | 'warn' | 'success'; title?: ReactNode; children: ReactNode }) {
   const kind = type === 'warn' ? 'warn' : type === 'success' ? 'ok' : 'info'
@@ -111,6 +112,7 @@ export function getMDXComponents(components?: MDXComponents) {
     Cards,
     Flow,
     Shot,
+    SourceFile,
     Step,
     Steps,
     Tab,

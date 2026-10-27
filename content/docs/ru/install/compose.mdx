@@ -20,12 +20,20 @@ cd /opt/remnawave-subscription-middleware
 
 ### Скачайте файл [#compose-get]
 
+Файл можно и не качать: раскройте «Содержимое файла», скопируйте, поправьте и сохраните под именем из блока кода.
+
 <Tabs groupId="scn" persist items={['Рядом с панелью', 'Свой реверс-прокси', 'Caddy из файла', 'nginx из файла']}>
 <Tab value="Рядом с панелью">
 
 ```bash title="Терминал"
 curl -fsSL https://raw.githubusercontent.com/Mrvibecodic/remnawave-subscription-middleware/main/docker/docker-compose.panel.yml -o docker-compose.yml
 ```
+
+<Accordions type="single">
+<Accordion title="Содержимое файла docker-compose.panel.yml">
+<SourceFile name="docker-compose.panel.yml" lang="yaml" title="docker-compose.yml" />
+</Accordion>
+</Accordions>
 
 </Tab>
 <Tab value="Свой реверс-прокси">
@@ -35,6 +43,18 @@ curl -fsSL https://raw.githubusercontent.com/Mrvibecodic/remnawave-subscription-
 ```
 
 С MariaDB вместо SQLite — тот же адрес, файл `docker-compose.standalone-mysql.yml`. Больше ничего настраивать не нужно.
+
+<Accordions type="single">
+<Accordion title="Содержимое файла docker-compose.standalone.yml">
+<SourceFile name="docker-compose.standalone.yml" lang="yaml" title="docker-compose.yml" />
+</Accordion>
+</Accordions>
+
+<Accordions type="single">
+<Accordion title="Содержимое файла docker-compose.standalone-mysql.yml">
+<SourceFile name="docker-compose.standalone-mysql.yml" lang="yaml" title="docker-compose.yml" />
+</Accordion>
+</Accordions>
 
 </Tab>
 <Tab value="Caddy из файла">
@@ -46,6 +66,24 @@ curl -fsSL https://raw.githubusercontent.com/Mrvibecodic/remnawave-subscription-
 
 С MariaDB вместо SQLite — файл `docker-compose.standalone-caddy-mysql.yml`.
 
+<Accordions type="single">
+<Accordion title="Содержимое файла docker-compose.standalone-caddy.yml">
+<SourceFile name="docker-compose.standalone-caddy.yml" lang="yaml" title="docker-compose.yml" />
+</Accordion>
+</Accordions>
+
+<Accordions type="single">
+<Accordion title="Содержимое файла docker-compose.standalone-caddy-mysql.yml">
+<SourceFile name="docker-compose.standalone-caddy-mysql.yml" lang="yaml" title="docker-compose.yml" />
+</Accordion>
+</Accordions>
+
+<Accordions type="single">
+<Accordion title="Содержимое файла Caddyfile">
+<SourceFile name="Caddyfile" lang="caddy" title="Caddyfile" />
+</Accordion>
+</Accordions>
+
 </Tab>
 <Tab value="nginx из файла">
 
@@ -55,6 +93,24 @@ curl -fsSL https://raw.githubusercontent.com/Mrvibecodic/remnawave-subscription-
 ```
 
 С MariaDB вместо SQLite — файл `docker-compose.standalone-nginx-mysql.yml`.
+
+<Accordions type="single">
+<Accordion title="Содержимое файла docker-compose.standalone-nginx.yml">
+<SourceFile name="docker-compose.standalone-nginx.yml" lang="yaml" title="docker-compose.yml" />
+</Accordion>
+</Accordions>
+
+<Accordions type="single">
+<Accordion title="Содержимое файла docker-compose.standalone-nginx-mysql.yml">
+<SourceFile name="docker-compose.standalone-nginx-mysql.yml" lang="yaml" title="docker-compose.yml" />
+</Accordion>
+</Accordions>
+
+<Accordions type="single">
+<Accordion title="Содержимое файла nginx.conf.template">
+<SourceFile name="nginx.conf.template" lang="nginx" title="nginx.conf.template" />
+</Accordion>
+</Accordions>
 
 </Tab>
 </Tabs>
