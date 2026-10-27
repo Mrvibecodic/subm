@@ -1,0 +1,10 @@
+{
+  "title": "Способы установки",
+  "icon": "Download",
+  "defaultOpen": true,
+  "pages": [
+    "compose",
+    "script",
+    "files"
+  ]
+}

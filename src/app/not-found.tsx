@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { i18n } from '@/lib/i18n'
 import { basePath } from '@/lib/shared'
 
-const home = `${basePath}/${i18n.defaultLanguage}/`
+const home = `${basePath}/${i18n.defaultLanguage}/docs/`
 
 export const metadata: Metadata = {
   title: '404',
@@ -12,8 +12,8 @@ export const metadata: Metadata = {
 export default function NotFound() {
   return (
     <html lang={i18n.defaultLanguage}>
-      <body className="flex flex-col min-h-screen items-center justify-center gap-2 text-center">
-        <h1 className="text-2xl font-bold">404</h1>
+      <body style={{ fontFamily: 'system-ui, sans-serif', padding: 24 }}>
+        <h1>404</h1>
         <p>
           Страница не найдена — <a href={home}>{home}</a>
         </p>

@@ -6,8 +6,8 @@
 
 ## Как устроено
 
-* [Fumadocs](https://fumadocs.dev) на Next.js, статическая сборка для GitHub Pages.
-* Страницы — `content/docs/ru/*.mdx`, порядок в меню — `content/docs/ru/meta.json`.
+* Next.js со статической сборкой для GitHub Pages. Контент, меню и поиск — [fumadocs-core](https://fumadocs.dev) и fumadocs-mdx, оформление своё (`src/app/global.css`, `src/components/`) — один в один с утверждённым макетом.
+* Страницы — `content/docs/ru/**/*.mdx`, порядок и группы меню — `meta.json`, иконки пунктов — поле `icon` (имя иконки Lucide).
 * Скриншоты — `public/screenshots/<имя>-<light|dark>-<d|m>.webp`: светлая и тёмная тема, ПК и телефон. Вставляются компонентом `<Shot name="<имя>" alt="…" />`, размеры — в `src/lib/shots.json`.
 * Сборка и публикация — `.github/workflows/pages.yml` при пуше в `main`.
 

@@ -7,9 +7,6 @@
     "requirements",
     "---Установка---",
     "install",
-    "install-compose",
-    "install-script",
-    "install-files",
     "wizard-link",
     "wizard",
     "after-install"

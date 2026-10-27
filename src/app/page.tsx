@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { i18n } from '@/lib/i18n'
 import { basePath } from '@/lib/shared'
 
-const target = `${basePath}/${i18n.defaultLanguage}/`
+const target = `${basePath}/${i18n.defaultLanguage}/docs/`
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -14,9 +14,9 @@ export default function RootRedirectPage() {
       <head>
         <meta httpEquiv="refresh" content={`0; url=${target}`} />
       </head>
-      <body className="flex min-h-screen flex-col items-center justify-center gap-2 text-center">
+      <body style={{ fontFamily: 'system-ui, sans-serif', padding: 24 }}>
         <p>Перенаправление…</p>
-        <a className="font-medium underline" href={target}>
+        <a href={target}>
           {target}
         </a>
       </body>

@@ -1,18 +1,19 @@
 ---
 title: Способы установки
 description: Готовым docker-compose.yml, скриптом или файлами на хостинг.
+icon: Download
 ---
 
 import { Box, Folder, Terminal } from 'lucide-react'
 
 <Cards>
-  <Card icon={<Box />} title="Docker Compose вручную" href="/ru/docs/install-compose">
+  <Card icon={<Box />} title="Docker Compose вручную" href="/ru/docs/install/compose">
     Берёте готовый `docker-compose.yml` под свой случай, правите пару строк и запускаете. Рекомендуемый способ.
   </Card>
-  <Card icon={<Terminal />} title="Скриптом" href="/ru/docs/install-script">
+  <Card icon={<Terminal />} title="Скриптом" href="/ru/docs/install/script">
     Отвечаете на вопросы в консоли. Скрипт сам скачает нужный файл, впишет ваши данные и запустит прослойку.
   </Card>
-  <Card icon={<Folder />} title="Файлами на хостинг" href="/ru/docs/install-files">
+  <Card icon={<Folder />} title="Файлами на хостинг" href="/ru/docs/install/files">
     Обычный PHP-сайт на любом хостинге или сервере, без Docker.
   </Card>
 </Cards>
