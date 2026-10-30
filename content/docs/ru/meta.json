@@ -9,6 +9,8 @@
     "install",
     "wizard-link",
     "wizard",
-    "after-install"
+    "after-install",
+    "---Обслуживание---",
+    "backup"
   ]
 }
