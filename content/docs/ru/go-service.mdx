@@ -31,7 +31,9 @@ Go-сервис не обязателен. Без него «Сессии» ра
 
 ### Добавьте сервис [#go-add]
 
-Тег образа — тот же, что у прослойки: `v1` или `dev`.
+<Callout type="warn">
+Сейчас Go-сервис есть только в тестовой ветке: образ Go — с тегом `dev`, и прослойка тоже должна быть на `dev`. В Docker — тег `dev` у образа прослойки (или `SUBMW_IMAGE_TAG=dev`), при установке файлами — `git fetch && git reset --hard origin/dev` в папке сайта. Тег `v1` у образа Go появится с ближайшим релизом прослойки.
+</Callout>
 
 <Tabs groupId="go" persist items={['Рядом с панелью', 'Отдельный сервер', 'Установка файлами']}>
 <Tab value="Рядом с панелью">
@@ -40,7 +42,7 @@ Go-сервис не обязателен. Без него «Сессии» ра
 
 ```yaml title="docker-compose.yml"
   submw-go:
-    image: ghcr.io/mrvibecodic/remnawave-subscription-middleware-go:${SUBMW_IMAGE_TAG:-v1}
+    image: ghcr.io/mrvibecodic/remnawave-subscription-middleware-go:dev
     container_name: submw-go
     hostname: submw-go
     restart: always
@@ -64,7 +66,7 @@ Go-сервис не обязателен. Без него «Сессии» ра
 
 ```yaml title="docker-compose.yml"
   submw-go:
-    image: ghcr.io/mrvibecodic/remnawave-subscription-middleware-go:${SUBMW_IMAGE_TAG:-v1}
+    image: ghcr.io/mrvibecodic/remnawave-subscription-middleware-go:dev
     container_name: submw-go
     hostname: submw-go
     restart: always
@@ -93,7 +95,7 @@ cd /opt/submw-go
 ```yaml title="docker-compose.yml"
 services:
   submw-go:
-    image: ghcr.io/mrvibecodic/remnawave-subscription-middleware-go:v1
+    image: ghcr.io/mrvibecodic/remnawave-subscription-middleware-go:dev
     container_name: submw-go
     restart: always
     network_mode: host
