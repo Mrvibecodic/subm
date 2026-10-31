@@ -33,7 +33,7 @@ Go-сервис не обязателен. Без него «Сессии» ра
 
 Тег образа — тот же, что у прослойки: `v1` или `dev`.
 
-<Tabs groupId="scn" persist items={['Рядом с панелью', 'Свой реверс-прокси', 'Caddy из файла', 'nginx из файла', 'Установка файлами']}>
+<Tabs groupId="go" persist items={['Рядом с панелью', 'Отдельный сервер', 'Установка файлами']}>
 <Tab value="Рядом с панелью">
 
 Допишите в `docker-compose.yml` прослойки в раздел `services:`:
@@ -58,31 +58,9 @@ Go-сервис не обязателен. Без него «Сессии» ра
 Сеть та же, что у прослойки: Go ходит в панель по тому же адресу, что и она (`http://remnawave:3000`).
 
 </Tab>
-<Tab value="Свой реверс-прокси">
+<Tab value="Отдельный сервер">
 
-Допишите в `docker-compose.yml` прослойки в раздел `services:`:
-
-```yaml title="docker-compose.yml"
-  submw-go:
-    image: ghcr.io/mrvibecodic/remnawave-subscription-middleware-go:${SUBMW_IMAGE_TAG:-v1}
-    container_name: submw-go
-    hostname: submw-go
-    restart: always
-    networks:
-      - submw-net
-    environment:
-      - SUBMW_GO_SECRET=секрет_из_админки
-    logging:
-      driver: json-file
-      options:
-        max-size: 10m
-        max-file: '3'
-```
-
-</Tab>
-<Tab value="Caddy из файла">
-
-Допишите в `docker-compose.yml` прослойки в раздел `services:`:
+Для любого compose отдельного сервера — со своим реверс-прокси, с Caddy или с nginx из файла. Допишите в `docker-compose.yml` прослойки в раздел `services:`:
 
 ```yaml title="docker-compose.yml"
   submw-go:
@@ -102,28 +80,7 @@ Go-сервис не обязателен. Без него «Сессии» ра
 ```
 
 </Tab>
-<Tab value="nginx из файла">
 
-Допишите в `docker-compose.yml` прослойки в раздел `services:`:
-
-```yaml title="docker-compose.yml"
-  submw-go:
-    image: ghcr.io/mrvibecodic/remnawave-subscription-middleware-go:${SUBMW_IMAGE_TAG:-v1}
-    container_name: submw-go
-    hostname: submw-go
-    restart: always
-    networks:
-      - submw-net
-    environment:
-      - SUBMW_GO_SECRET=секрет_из_админки
-    logging:
-      driver: json-file
-      options:
-        max-size: 10m
-        max-file: '3'
-```
-
-</Tab>
 <Tab value="Установка файлами">
 
 Создайте папку и в ней `docker-compose.yml`:
