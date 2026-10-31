@@ -1,0 +1,221 @@
+---
+title: Go-сервис для сессий
+description: Отдельный контейнер, который опрашивает ноды для «Сессий» быстрее и надёжнее. Прослойка находит его сама.
+icon: Zap
+---
+
+«Сессии» раз в минуту-две спрашивают у панели, кто сейчас онлайн на каждой ноде. Сама прослойка делает это по очереди: поставила задание первой ноде, второй, третьей — и ждёт ответы. При десятке нод опрос растягивается, а часть нод не успевает ответить.
+
+Go-сервис опрашивает все ноды сразу и отдаёт прослойке готовый результат. Всё остальное — запись сессий, гео, аномалии, «Сейчас онлайн» и сброс соединений в карточке — по-прежнему делает прослойка.
+
+<Callout>
+Go-сервис не обязателен. Без него «Сессии» работают как раньше. Если он перестанет отвечать, прослойка сама вернётся к своему опросу — история не прервётся.
+</Callout>
+
+## Что нужно [#go-need]
+
+* Включён сбор сессий: «Пользователи» → блок «Сессии» → «Собирать историю сессий».
+* Docker на сервере прослойки. Для установки файлами Go-сервис тоже ставится контейнером — рядом с сайтом.
+
+## Установка [#go-install]
+
+<Steps>
+<Step>
+
+### Скопируйте секрет [#go-secret]
+
+«Пользователи» → блок «Сессии» → «Go-сервис» → «Секрет» → кнопка копирования. Без секрета Go-сервис не примет запросы — так никто, кроме прослойки, не сможет гонять через него запросы к панели.
+
+</Step>
+<Step>
+
+### Добавьте сервис [#go-add]
+
+Тег образа — тот же, что у прослойки: `v1` или `dev`.
+
+<Tabs groupId="scn" persist items={['Рядом с панелью', 'Свой реверс-прокси', 'Caddy из файла', 'nginx из файла', 'Установка файлами']}>
+<Tab value="Рядом с панелью">
+
+Допишите в `docker-compose.yml` прослойки в раздел `services:`:
+
+```yaml title="docker-compose.yml"
+  submw-go:
+    image: ghcr.io/mrvibecodic/remnawave-subscription-middleware-go:${SUBMW_IMAGE_TAG:-v1}
+    container_name: submw-go
+    hostname: submw-go
+    restart: always
+    networks:
+      - remnawave-network
+    environment:
+      - SUBMW_GO_SECRET=секрет_из_админки
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+```
+
+Сеть та же, что у прослойки: Go ходит в панель по тому же адресу, что и она (`http://remnawave:3000`).
+
+</Tab>
+<Tab value="Свой реверс-прокси">
+
+Допишите в `docker-compose.yml` прослойки в раздел `services:`:
+
+```yaml title="docker-compose.yml"
+  submw-go:
+    image: ghcr.io/mrvibecodic/remnawave-subscription-middleware-go:${SUBMW_IMAGE_TAG:-v1}
+    container_name: submw-go
+    hostname: submw-go
+    restart: always
+    networks:
+      - submw-net
+    environment:
+      - SUBMW_GO_SECRET=секрет_из_админки
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+```
+
+</Tab>
+<Tab value="Caddy из файла">
+
+Допишите в `docker-compose.yml` прослойки в раздел `services:`:
+
+```yaml title="docker-compose.yml"
+  submw-go:
+    image: ghcr.io/mrvibecodic/remnawave-subscription-middleware-go:${SUBMW_IMAGE_TAG:-v1}
+    container_name: submw-go
+    hostname: submw-go
+    restart: always
+    networks:
+      - submw-net
+    environment:
+      - SUBMW_GO_SECRET=секрет_из_админки
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+```
+
+</Tab>
+<Tab value="nginx из файла">
+
+Допишите в `docker-compose.yml` прослойки в раздел `services:`:
+
+```yaml title="docker-compose.yml"
+  submw-go:
+    image: ghcr.io/mrvibecodic/remnawave-subscription-middleware-go:${SUBMW_IMAGE_TAG:-v1}
+    container_name: submw-go
+    hostname: submw-go
+    restart: always
+    networks:
+      - submw-net
+    environment:
+      - SUBMW_GO_SECRET=секрет_из_админки
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+```
+
+</Tab>
+<Tab value="Установка файлами">
+
+Создайте папку и в ней `docker-compose.yml`:
+
+```bash title="Терминал"
+mkdir -p /opt/submw-go
+cd /opt/submw-go
+```
+
+```yaml title="docker-compose.yml"
+services:
+  submw-go:
+    image: ghcr.io/mrvibecodic/remnawave-subscription-middleware-go:v1
+    container_name: submw-go
+    restart: always
+    network_mode: host
+    environment:
+      - SUBMW_GO_LISTEN=127.0.0.1:8090
+      - SUBMW_GO_SECRET=секрет_из_админки
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+```
+
+`network_mode: host` — Go видит панель так же, как сайт на этом сервере, а слушает только `127.0.0.1`: снаружи до него не достучаться.
+
+<Callout type="warn">
+Не убирайте строку `SUBMW_GO_LISTEN=127.0.0.1:8090`. Без неё Go в режиме `network_mode: host` слушает порт 8090 на всех адресах сервера, и до него можно достучаться из интернета — защищать его будет только секрет.
+</Callout>
+
+</Tab>
+</Tabs>
+
+Вместо `секрет_из_админки` вставьте секрет из первого шага.
+
+</Step>
+<Step>
+
+### Запустите [#go-run]
+
+```bash title="Терминал"
+docker compose up -d submw-go
+```
+
+</Step>
+<Step>
+
+### Проверьте [#go-check]
+
+«Пользователи» → блок «Сессии» → «Go-сервис» → «Проверить». Должно появиться «Ноды опрашивает Go», а в заголовке блока — бейдж «Go». Прослойка находит сервис сама: в Docker по адресу `http://submw-go:8090`, при установке файлами — `http://127.0.0.1:8090`. Если вы назвали сервис иначе или сменили порт, впишите адрес в поле «Адрес Go-сервиса».
+
+</Step>
+</Steps>
+
+## Интервал опроса [#go-interval]
+
+Когда Go появляется первый раз, прослойка ставит опрос раз в минуту (если вы не меняли прежние две минуты). Дальше интервал — ваш: «Как часто опрашивать ноды» в том же блоке.
+
+<Callout type="warn">
+Каждый опрос — минимум два запроса к панели на каждую ноду. При 20 нодах раз в минуту это около 58 тысяч запросов в сутки, раз в две минуты — вдвое меньше. Сколько уходит на самом деле — видно в журнале опросов и на «О системе» → «Запросы к панели», строка «Go-сервис: опрос нод».
+</Callout>
+
+## Значок и журнал [#go-journal]
+
+В заголовке блока «Сессии» бейдж показывает, кто опрашивает ноды:
+
+| Бейдж | Что значит |
+|---|---|
+| Go | Ноды опрашивает Go |
+| PHP | Ноды опрашивает прослойка — Go не стоит или выключен |
+| PHP · Go не отвечает, PHP вместо Go (жёлтый) | Go был, но сейчас не справился — опрос делает прослойка. Причина — при наведении и в блоке «Go-сервис» |
+
+Ниже — «Журнал опросов»: каждый опрос за 7 дней — кто опрашивал, сколько нод ответило, сколько длился опрос, сколько ушло запросов к панели и что не так. Сверху — сводка за сутки или 3 дня отдельно по Go и по прослойке. Опросы до установки Go тоже в журнале — с ними и сравнивать. «CSV за 7 дней» выгружает журнал целиком для разбора.
+
+## Если что-то не так [#go-trouble]
+
+| Сообщение | Что сделать |
+|---|---|
+| Не отвечает: адрес не найден / соединение отклонено | Контейнер не запущен или в другой сети. Проверьте `docker compose ps` и что у `submw-go` те же `networks`, что у прослойки. |
+| Секрет не подходит | В `SUBMW_GO_SECRET` не тот секрет — скопируйте текущий из админки и выполните `docker compose up -d submw-go`. |
+| В Go-контейнере не задан секрет | Добавьте `SUBMW_GO_SECRET` в `environment`. |
+| Версия Go-сервиса не подходит к прослойке | Обновите образ: `docker compose pull submw-go && docker compose up -d submw-go`. |
+| Go не достучался до панели | Go в другой сети, чем панель. В Docker подключите его к тем же сетям, что и прослойку; при установке файлами — `network_mode: host`. |
+
+Пока Go не справляется, ноды опрашивает прослойка, и история сессий не прерывается.
+
+## Сменить секрет, выключить, удалить [#go-off]
+
+* **Сменить секрет** — кнопка рядом с секретом. До того как вы впишете новый в контейнер, опрос делает прослойка.
+* **Выключить** — «Не использовать Go»: прослойка опрашивает ноды сама, даже когда Go отвечает. Удобно для сравнения.
+* **Удалить** — уберите сервис из `docker-compose.yml` и выполните `docker compose up -d --remove-orphans`; при установке файлами — `docker compose down` в папке `/opt/submw-go`. Если адрес Go не задан вручную, через неделю молчания прослойка перестанет его ждать и уберёт жёлтый бейдж.
+
+Обновляется Go-сервис вместе с прослойкой: `docker compose pull && docker compose up -d`.

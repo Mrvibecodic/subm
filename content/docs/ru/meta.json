@@ -11,6 +11,8 @@
     "wizard",
     "after-install",
     "---Обслуживание---",
-    "backup"
+    "backup",
+    "---Дополнительно---",
+    "go-service"
   ]
 }
