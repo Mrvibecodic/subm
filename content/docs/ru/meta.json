@@ -12,6 +12,7 @@
     "after-install",
     "---Обслуживание---",
     "backup",
+    "chat-telegram",
     "---Дополнительно---",
     "go-service"
   ]
