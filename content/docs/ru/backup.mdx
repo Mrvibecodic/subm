@@ -124,28 +124,17 @@ docker compose up -d
 </Tab>
 <Tab value="Файлами на хостинге">
 
-**1. Лимит PHP.** Проще всего — в панели хостинга, в настройках PHP сайта: поставьте `upload_max_filesize` и `post_max_size`, например `64M`. Если таких настроек нет:
+**1. Лимит PHP.** Проще всего — в панели хостинга, в настройках PHP сайта: поставьте `upload_max_filesize` и `post_max_size`, например `64M`. Если таких настроек нет, создайте в корне сайта файл `.user.ini` — PHP-FPM подхватит его в течение 5 минут:
 
-* **PHP-FPM или FastCGI** (так работает большинство хостингов) — создайте в корне сайта файл `.user.ini`. PHP подхватит его в течение 5 минут.
-
-  ```ini title=".user.ini"
-  upload_max_filesize = 64M
-  post_max_size = 64M
-  ```
-
-* **Apache с модулем PHP (mod_php)** — `.user.ini` он не читает, добавьте строки в конец `.htaccess` в корне сайта. При PHP-FPM и FastCGI эти строки не добавляйте: сайт перестанет открываться с ошибкой 500.
-
-  ```apache title=".htaccess"
-  php_value upload_max_filesize 64M
-  php_value post_max_size 64M
-  ```
-
-Какой у вас вариант, видно на вкладке «О системе», в строке PHP: `fpm-fcgi` или `cgi-fcgi` — первый, `apache2handler` — второй.
+```ini title=".user.ini"
+upload_max_filesize = 64M
+post_max_size = 64M
+```
 
 **2. Лимит веб-сервера.**
 
-* **Apache с PHP через FastCGI (mod_fcgid)** по умолчанию пропускает запросы только до 128 КБ, а больше обрывает ошибкой 500. В настройках сайта добавьте `FcgidMaxRequestLen 67108864` (64 МБ) и перезапустите Apache. В `.htaccess` эта строка не работает — только в конфиге сайта или в панели хостинга.
 * **nginx** — в блоке `server` сайта `client_max_body_size 64m;`, затем `nginx -s reload`.
+* **Caddy** размер не ограничивает, ничего делать не нужно.
 
 </Tab>
 </Tabs>

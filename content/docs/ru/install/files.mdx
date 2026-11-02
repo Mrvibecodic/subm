@@ -1,6 +1,6 @@
 ---
 title: Файлами на хостинг
-description: Прослойка — обычный PHP-сайт. Подойдёт любой хостинг или сервер с PHP, Docker не нужен.
+description: Прослойка — обычный PHP-сайт. Подойдёт сервер или хостинг с nginx или Caddy и PHP 8.3+, Docker не нужен.
 ---
 
 Шаги одинаковые для любой панели хостинга и для своего сервера. Пункты меню у панелей называются по-разному, смысл тот же.
@@ -10,7 +10,7 @@ description: Прослойка — обычный PHP-сайт. Подойдё�
 
 ### Создайте сайт [#files-site]
 
-Сайт на домене прослойки. Вместо текущей подписки — домен подписки панели, для зеркала — новый домен. Выберите PHP 8.1 или новее и включите сертификат Let's Encrypt: обычно это галочка в настройках сайта.
+Сайт на домене прослойки. Вместо текущей подписки — домен подписки панели, для зеркала — новый домен. Выберите PHP 8.3 или новее и включите сертификат Let's Encrypt: обычно это галочка в настройках сайта. Веб-сервер — nginx или Caddy с PHP-FPM. Apache не поддерживается: если панель хостинга предлагает выбор, включите режим «nginx + PHP-FPM».
 
 </Step>
 <Step>
@@ -26,10 +26,6 @@ cd /var/www/sub.example.com      # корень сайта, папка долж�
 git clone https://github.com/Mrvibecodic/remnawave-subscription-middleware.git .
 ```
 
-<Callout type="warn">
-Проверьте, что загрузился скрытый файл `.htaccess`. Файловые менеджеры часто прячут файлы, имя которых начинается с точки. Без него служебные папки будут открыты из интернета.
-</Callout>
-
 </Step>
 <Step>
 
@@ -42,15 +38,12 @@ PHP должен иметь право записи в папку `data/` — т
 
 ### Закройте служебные пути [#files-web]
 
-<Tabs groupId="web" persist items={['Apache', 'nginx']}>
-<Tab value="Apache">
+Без этих правил служебные папки и база будут открыты из интернета.
 
-Всё уже прописано в `.htaccess`. Нужны модуль `mod_rewrite` и разрешение на `.htaccess` (`AllowOverride All`) — на хостингах они почти всегда включены. Связка nginx + Apache, как во многих панелях хостинга, тоже подходит.
-
-</Tab>
+<Tabs groupId="web" persist items={['nginx', 'Caddy']}>
 <Tab value="nginx">
 
-Чистый nginx не читает `.htaccess`, правила нужно добавить в блок `server` сайта:
+Добавьте правила в блок `server` сайта — в панели хостинга это обычно настройки или конфигурация nginx сайта:
 
 ```nginx title="nginx"
 root /var/www/sub.example.com;
@@ -64,6 +57,7 @@ location ^~ /data/      { deny all; }
 location ^~ /lib/       { deny all; }
 location ^~ /backups/   { deny all; }
 location ^~ /docker/    { deny all; }
+location ^~ /go/        { deny all; }
 location ^~ /tools/     { deny all; }
 location ^~ /admin/inc/ { deny all; }
 
@@ -74,6 +68,50 @@ location ~ \.php$ {
     include fastcgi_params;
     fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
     fastcgi_pass unix:/run/php/php8.3-fpm.sock;   # ваш сокет PHP-FPM
+}
+```
+
+</Tab>
+<Tab value="Caddy">
+
+Блок сайта в `Caddyfile` целиком — сертификат Caddy выпустит сам:
+
+```text title="Caddyfile"
+sub.example.com {
+	root * /var/www/sub.example.com
+	encode zstd gzip
+
+	@deny {
+		path /config.php /config.example.php /lib.php /schema.sql /README.md /INSTALL.md /install.sh /Dockerfile
+		path /data/* /lib/* /backups/* /docker/* /go/* /tools/* /admin/inc/*
+		path *.sqlite *.sqlite3 *.db *.db-wal *.db-shm
+	}
+	respond @deny 403
+
+	@appcfg path_regexp ^/(.*/)?assets/\.app-config-v2\.json$
+	rewrite @appcfg /index.php?{query}
+
+	@hidden {
+		path_regexp /\.
+		not path /.well-known/*
+	}
+	respond @hidden 403
+
+	@admin {
+		path /admin/*
+		not path /admin/inc/*
+		not file
+	}
+	rewrite @admin /admin/index.php?{query}
+
+	@nophp {
+		path *.php
+		not file
+	}
+	respond @nophp 404
+
+	php_fastcgi unix//run/php/php8.3-fpm.sock # ваш сокет PHP-FPM
+	file_server
 }
 ```
 
