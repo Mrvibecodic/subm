@@ -1,6 +1,7 @@
 {
   "title": "Возможности",
   "pages": [
-    "users"
+    "users",
+    "host-overrides"
   ]
 }
