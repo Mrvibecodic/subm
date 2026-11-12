@@ -2,6 +2,7 @@
   "title": "Возможности",
   "pages": [
     "users",
-    "host-overrides"
+    "host-overrides",
+    "chat-widget"
   ]
 }
