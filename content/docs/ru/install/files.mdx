@@ -57,6 +57,7 @@ location ^~ /data/      { deny all; }
 location ^~ /lib/       { deny all; }
 location ^~ /backups/   { deny all; }
 location ^~ /docker/    { deny all; }
+location ^~ /docs/      { deny all; }
 location ^~ /go/        { deny all; }
 location ^~ /tools/     { deny all; }
 location ^~ /admin/inc/ { deny all; }
@@ -83,7 +84,7 @@ sub.example.com {
 
 	@deny {
 		path /config.php /config.example.php /lib.php /schema.sql /README.md /INSTALL.md /install.sh /Dockerfile
-		path /data/* /lib/* /backups/* /docker/* /go/* /tools/* /admin/inc/*
+		path /data/* /lib/* /backups/* /docker/* /docs/* /go/* /tools/* /admin/inc/*
 		path *.sqlite *.sqlite3 *.db *.db-wal *.db-shm
 	}
 	respond @deny 403
@@ -119,6 +120,10 @@ sub.example.com {
 </Tabs>
 
 Проверьте в браузере: `https://sub.example.com/schema.sql` и `https://sub.example.com/lib/` должны отвечать ошибкой 403 или 404.
+
+<Callout>
+Ставили прослойку раньше? В прежних правилах не было пути `/docs/`. Добавьте его: в nginx — строку `location ^~ /docs/ { deny all; }`, в Caddy — `/docs/*` в список `@deny`. Пока путь открыт, админка показывает уведомление вверху страницы.
+</Callout>
 
 </Step>
 <Step>
